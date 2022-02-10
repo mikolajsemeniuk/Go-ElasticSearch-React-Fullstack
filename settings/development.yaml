@@ -1,0 +1,7 @@
+server:
+  port: 3000
+  basepath: api/v1
+
+database:
+  elasticsearch:
+    connectionstring: http://localhost:9200

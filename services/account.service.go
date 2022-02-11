@@ -19,7 +19,10 @@ var AccountService IAccountService = &accountService{}
 
 type IAccountService interface {
 	FindAccounts() ([]payloads.Account, error)
-	AddAccount(input inputs.Account) (*payloads.Account, error)
+	AddAccount(input inputs.Account) ([]payloads.Account, error)
+	FindAccount(id uuid.UUID) ([]payloads.Account, error)
+	RemoveAccount(id uuid.UUID) ([]payloads.Account, error)
+	UpdateAccount(id uuid.UUID, input inputs.Account) ([]payloads.Account, error)
 }
 
 type accountService struct{}
@@ -51,9 +54,9 @@ func (*accountService) FindAccounts() ([]payloads.Account, error) {
 	return payloads, err
 }
 
-func (*accountService) AddAccount(input inputs.Account) (*payloads.Account, error) {
-	payload := &payloads.Account{}
-	entity := &entities.Account{
+func (*accountService) AddAccount(input inputs.Account) ([]payloads.Account, error) {
+	payload := payloads.Account{}
+	entity := entities.Account{
 		Id:      uuid.New(),
 		Created: time.Now(),
 	}
@@ -74,7 +77,6 @@ func (*accountService) AddAccount(input inputs.Account) (*payloads.Account, erro
 
 	err = repositories.AccountRepository.AddAccount(entity.Id, body)
 	if err != nil {
-		extensions.Error(err.Error())
 		return nil, err
 	}
 
@@ -86,5 +88,102 @@ func (*accountService) AddAccount(input inputs.Account) (*payloads.Account, erro
 	}
 
 	extensions.Info("done")
-	return payload, nil
+	return []payloads.Account{payload}, nil
+}
+
+func (*accountService) FindAccount(id uuid.UUID) ([]payloads.Account, error) {
+	payload := payloads.Account{}
+
+	entity, err := repositories.AccountRepository.FindAccount(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if entity == nil {
+		err = fmt.Errorf("account not found")
+		return nil, err
+	}
+
+	err = copier.Copy(&payload, &entity)
+	if err != nil {
+		err = fmt.Errorf("error while copying to payload from entity, %s", err.Error())
+		extensions.Error(err.Error())
+		return nil, err
+	}
+
+	extensions.Info("done")
+	return []payloads.Account{payload}, nil
+}
+
+func (*accountService) RemoveAccount(id uuid.UUID) ([]payloads.Account, error) {
+	payload := payloads.Account{}
+
+	entity, err := repositories.AccountRepository.FindAccount(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if entity == nil {
+		err = fmt.Errorf("account not found")
+		return nil, err
+	}
+
+	err = repositories.AccountRepository.RemoveAccount(id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = copier.Copy(&payload, &entity)
+	if err != nil {
+		err = fmt.Errorf("error while copying to payload from entity, %s", err.Error())
+		extensions.Error(err.Error())
+		return nil, err
+	}
+
+	extensions.Info("done")
+	return []payloads.Account{payload}, nil
+}
+
+func (*accountService) UpdateAccount(id uuid.UUID, input inputs.Account) ([]payloads.Account, error) {
+	payload := payloads.Account{}
+	updated := time.Now()
+
+	entity, err := repositories.AccountRepository.FindAccount(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if entity == nil {
+		err = fmt.Errorf("account not found")
+		return nil, err
+	}
+	entity.Updated = &updated
+
+	err = copier.Copy(&entity, &input)
+	if err != nil {
+		err = fmt.Errorf("error while copying to entity from input, %s", err.Error())
+		extensions.Error(err.Error())
+		return nil, err
+	}
+
+	body, err := json.Marshal(entity)
+	if err != nil {
+		err = fmt.Errorf("error while marshal post to json, %s", err.Error())
+		extensions.Error(err.Error())
+		return nil, err
+	}
+
+	err = repositories.AccountRepository.UpdateAccount(id, body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = copier.Copy(&payload, &entity)
+	if err != nil {
+		err = fmt.Errorf("error while copying to payload from entity, %s", err.Error())
+		extensions.Error(err.Error())
+		return nil, err
+	}
+
+	return []payloads.Account{payload}, nil
 }

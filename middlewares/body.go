@@ -16,7 +16,11 @@ func Body(input interface{}) gin.HandlerFunc {
 		}
 
 		if err := context.BindJSON(&input); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"data":    nil,
+				"errors":  []string{err.Error()},
+				"message": "body is not a valid JSON",
+			})
 			return
 		}
 

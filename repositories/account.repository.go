@@ -21,6 +21,9 @@ var AccountRepository IAccountRepository = &accountRepository{}
 type IAccountRepository interface {
 	FindAccounts(buffer bytes.Buffer) ([]entities.Account, error)
 	AddAccount(id uuid.UUID, body []byte) error
+	FindAccount(id uuid.UUID) (*entities.Account, error)
+	RemoveAccount(id uuid.UUID) error
+	UpdateAccount(id uuid.UUID, body []byte) error
 }
 
 type accountRepository struct{}
@@ -99,6 +102,132 @@ func (*accountRepository) AddAccount(id uuid.UUID, body []byte) error {
 		response, err := request.Do(context.Background(), data.ElasticSearch)
 		if err != nil {
 			message := fmt.Errorf("error while adding to database, %s", err.Error())
+			extensions.Info(message.Error())
+			channel <- message
+			return
+		}
+
+		defer response.Body.Close()
+		if response.IsError() {
+			message := fmt.Errorf("error indexing document with id: %s, status: %s", id, response.Status())
+			extensions.Info(message.Error())
+			channel <- message
+			return
+		}
+
+		extensions.Info("done")
+		channel <- nil
+	}()
+
+	return <-channel
+}
+
+func (*accountRepository) FindAccount(id uuid.UUID) (*entities.Account, error) {
+	type signal struct {
+		Account *entities.Account
+		Error   error
+	}
+
+	channel := make(chan signal)
+	go func() {
+		var entity entities.Account
+
+		request := esapi.GetRequest{
+			Index:      index,
+			DocumentID: id.String(),
+		}
+
+		response, err := request.Do(context.Background(), data.ElasticSearch)
+		if err != nil {
+			message := fmt.Errorf("error while fetching record from database, %s", err.Error())
+			extensions.Error(message.Error())
+			channel <- signal{nil, message}
+			return
+		}
+
+		defer response.Body.Close()
+		if response.IsError() && response.StatusCode != 404 {
+			message := fmt.Errorf("error indexing document with id: %s, status: %s", id, response.Status())
+			extensions.Error(message.Error())
+			channel <- signal{nil, message}
+			return
+		}
+
+		if response.IsError() && response.StatusCode == 404 {
+			channel <- signal{nil, nil}
+			return
+		}
+
+		body := make(map[string]interface{})
+		if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+			message := fmt.Errorf("error parsing the response body: %s", err.Error())
+			extensions.Error(message.Error())
+			channel <- signal{nil, message}
+			return
+		}
+
+		err = extensions.Decode(body["_source"].(map[string]interface{}), &entity)
+		if err != nil {
+			message := fmt.Errorf("error mapping from _source to entity: %s", err.Error())
+			extensions.Error(message.Error())
+			channel <- signal{nil, message}
+			return
+		}
+
+		channel <- signal{&entity, nil}
+	}()
+
+	extensions.Info("done")
+	response := <-channel
+	return response.Account, response.Error
+}
+
+func (*accountRepository) RemoveAccount(id uuid.UUID) error {
+	channel := make(chan error)
+	go func() {
+		request := esapi.DeleteRequest{
+			Index:      index,
+			DocumentID: id.String(),
+		}
+
+		response, err := request.Do(context.Background(), data.ElasticSearch)
+		if err != nil {
+			err := fmt.Errorf("error while removing from database, %s", err.Error())
+			extensions.Info(err.Error())
+			channel <- err
+			return
+		}
+
+		defer response.Body.Close()
+		if response.IsError() {
+			err = fmt.Errorf("error indexing document with id: %s, status: %s", id, response.Status())
+			extensions.Info(err.Error())
+			channel <- err
+			return
+		}
+
+		extensions.Info("done")
+		channel <- nil
+	}()
+
+	return <-channel
+}
+
+func (*accountRepository) UpdateAccount(id uuid.UUID, body []byte) error {
+	channel := make(chan error)
+	go func() {
+		body = []byte(fmt.Sprintf(`{"doc":%s}`, body))
+		reader := bytes.NewReader(body)
+
+		request := esapi.UpdateRequest{
+			Index:      index,
+			DocumentID: id.String(),
+			Body:       reader,
+		}
+
+		response, err := request.Do(context.Background(), data.ElasticSearch)
+		if err != nil {
+			message := fmt.Errorf("error while updating to database, %s", err.Error())
 			extensions.Info(message.Error())
 			channel <- message
 			return

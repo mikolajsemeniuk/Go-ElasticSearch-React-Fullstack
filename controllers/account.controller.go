@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/extensions"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/inputs"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/payloads"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/services"
 )
 
@@ -21,7 +23,31 @@ type IAccountController interface {
 type accountController struct{}
 
 func (*accountController) FindAccounts(context *gin.Context) {
-	accounts, err := services.AccountService.FindAccounts()
+	payloads, err := services.AccountService.FindAccounts()
+	if err != nil {
+		context.JSON(http.StatusServiceUnavailable, gin.H{
+			"data":    payloads,
+			"errors":  []string{err.Error()},
+			"message": "error occured",
+		})
+		return
+	}
+
+	extensions.Info("done")
+	context.JSON(http.StatusOK, gin.H{
+		"data":    payloads,
+		"errors":  []string{},
+		"message": "All accounts were fetched",
+	})
+}
+
+func (*accountController) FindAccountById(context *gin.Context) {
+
+}
+
+func (*accountController) AddAccount(context *gin.Context) {
+	input := context.MustGet("input").(*inputs.Account)
+	payload, err := services.AccountService.AddAccount(*input)
 	if err != nil {
 		context.JSON(http.StatusServiceUnavailable, gin.H{
 			"data":    nil,
@@ -33,18 +59,10 @@ func (*accountController) FindAccounts(context *gin.Context) {
 
 	extensions.Info("done")
 	context.JSON(http.StatusOK, gin.H{
-		"data":    accounts,
+		"data":    []*payloads.Account{payload},
 		"errors":  []string{},
-		"message": "All accounts were fetched",
+		"message": "Account successfully added",
 	})
-}
-
-func (*accountController) FindAccountById(context *gin.Context) {
-
-}
-
-func (*accountController) AddAccount(context *gin.Context) {
-
 }
 
 func (*accountController) UpdateAccount(context *gin.Context) {

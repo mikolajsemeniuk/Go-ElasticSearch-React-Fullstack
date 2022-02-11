@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/controllers"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/inputs"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/middlewares"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/settings"
 )
 
@@ -16,6 +18,7 @@ func Listen() {
 		accounts := v1.Group("accounts")
 		{
 			accounts.GET("", controllers.AccountController.FindAccounts)
+			accounts.POST("", middlewares.Body(inputs.Account{}), controllers.AccountController.AddAccount)
 		}
 	}
 	port := fmt.Sprintf(":%s", settings.Configuration.GetString("server.port"))

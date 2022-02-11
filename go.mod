@@ -25,6 +25,7 @@ require (
 
 require (
 	github.com/TwiN/go-color v1.1.0
+	github.com/elastic/go-elasticsearch v0.0.0
 	github.com/elastic/go-elasticsearch/v8 v8.0.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect

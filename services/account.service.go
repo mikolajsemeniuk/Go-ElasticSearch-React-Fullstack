@@ -56,10 +56,7 @@ func (*accountService) FindAccounts() ([]payloads.Account, error) {
 
 func (*accountService) AddAccount(input inputs.Account) ([]payloads.Account, error) {
 	payload := payloads.Account{}
-	entity := entities.Account{
-		Id:      uuid.New(),
-		Created: time.Now(),
-	}
+	entity := entities.NewAccount()
 
 	err := copier.Copy(&entity, &input)
 	if err != nil {

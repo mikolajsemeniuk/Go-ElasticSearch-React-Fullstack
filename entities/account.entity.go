@@ -14,3 +14,10 @@ type Account struct {
 	Created  time.Time  `json:"created"`
 	Updated  *time.Time `json:"updated"`
 }
+
+func NewAccount() Account {
+	return Account{
+		Id:      uuid.New(),
+		Created: time.Now(),
+	}
+}

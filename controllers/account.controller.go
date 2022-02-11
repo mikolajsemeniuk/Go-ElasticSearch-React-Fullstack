@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/extensions"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/services"
 )
 
@@ -24,12 +25,13 @@ func (*accountController) FindAccounts(context *gin.Context) {
 	if err != nil {
 		context.JSON(http.StatusServiceUnavailable, gin.H{
 			"data":    nil,
-			"errors":  []string{"database error"},
+			"errors":  []string{err.Error()},
 			"message": "All accounts were fetched",
 		})
 		return
 	}
 
+	extensions.Info("done")
 	context.JSON(http.StatusOK, gin.H{
 		"data":    accounts,
 		"errors":  []string{},

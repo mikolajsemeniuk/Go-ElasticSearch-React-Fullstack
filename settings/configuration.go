@@ -29,8 +29,8 @@ func init() {
 	Configuration.SetConfigName(Enviroment)
 	Configuration.AddConfigPath("../settings")
 	Configuration.AddConfigPath("settings/")
-	err := Configuration.ReadInConfig()
 
+	err := Configuration.ReadInConfig()
 	if err != nil {
 		panic(color.Ize(color.Red, err.Error()))
 	}

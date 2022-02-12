@@ -13,7 +13,7 @@ func Response(context *gin.Context) {
 	if err != nil {
 		context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"data":   nil,
-			"errors": err,
+			"errors": []string{err.(error).Error()},
 		})
 		return
 	}

@@ -6,14 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/controllers"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/docs"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/inputs"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/middlewares"
 	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/settings"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 var router = gin.Default()
 
 func Listen() {
+	docs.SwaggerInfo_swagger.BasePath = settings.Configuration.GetString("server.basepath")
 	v1 := router.Group(settings.Configuration.GetString("server.basepath"))
 	{
 		accounts := v1.Group("accounts")
@@ -26,7 +30,7 @@ func Listen() {
 			accounts.PATCH(":id", middlewares.Body(inputs.Account{}), controllers.AccountController.UpdateAccount, middlewares.Response)
 		}
 	}
-	router.Use(middlewares.Response)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	port := fmt.Sprintf(":%s", settings.Configuration.GetString("server.port"))
 	router.Run(port)
 }

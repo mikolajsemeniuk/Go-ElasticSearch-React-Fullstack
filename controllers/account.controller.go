@@ -20,6 +20,14 @@ type IAccountController interface {
 
 type accountController struct{}
 
+// @Summary get all accounts
+// @Schemes
+// @Description get all accounts
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /accounts [get]
 func (*accountController) FindAccounts(context *gin.Context) {
 	payloads, err := services.AccountService.FindAccounts()
 
@@ -30,6 +38,16 @@ func (*accountController) FindAccounts(context *gin.Context) {
 	context.Next()
 }
 
+// @Summary add account
+// @Schemes
+// @Description add account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param account body inputs.Account true "account to create"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /accounts [post]
 func (*accountController) AddAccount(context *gin.Context) {
 	input := context.MustGet("input").(*inputs.Account)
 
@@ -41,6 +59,17 @@ func (*accountController) AddAccount(context *gin.Context) {
 	extensions.Info("done")
 }
 
+// @Summary get account by id
+// @Schemes
+// @Description get account by id
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id path string true "Account ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /accounts/{accountId} [get]
 func (*accountController) FindAccount(context *gin.Context) {
 	id := context.MustGet("id").(uuid.UUID)
 
@@ -52,6 +81,17 @@ func (*accountController) FindAccount(context *gin.Context) {
 	extensions.Info("done")
 }
 
+// @Summary remove account
+// @Schemes
+// @Description remove account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id path string true "Account ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /accounts/{accountId} [delete]
 func (*accountController) RemoveAccount(context *gin.Context) {
 	id := context.MustGet("id").(uuid.UUID)
 
@@ -63,6 +103,18 @@ func (*accountController) RemoveAccount(context *gin.Context) {
 	extensions.Info("done")
 }
 
+// @Summary update account
+// @Schemes
+// @Description update account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id path string true "Account ID"
+// @Param account body inputs.Account true "account to update"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /accounts/{id} [patch]
 func (*accountController) UpdateAccount(context *gin.Context) {
 	id := context.MustGet("id").(uuid.UUID)
 	body := context.MustGet("input").(*inputs.Account)

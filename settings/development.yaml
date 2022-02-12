@@ -1,6 +1,6 @@
 server:
   port: 3000
-  basepath: api/v1
+  basepath: /api/v1
 
 database:
   elasticsearch:

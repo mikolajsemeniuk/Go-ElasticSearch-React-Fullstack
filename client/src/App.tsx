@@ -1,13 +1,11 @@
-import './App.css';
+import Accounts from "./components/accounts";
 
 const App = (): JSX.Element => {
   return (
     <div className="App">
-      <h1>
-        Hi
-      </h1>
+      <Accounts />
     </div>
   );
-}
+};
 
 export default App;

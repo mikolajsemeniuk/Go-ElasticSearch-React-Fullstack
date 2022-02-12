@@ -8,8 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// FIXME: standarize method
-func toTimeHookFunc() mapstructure.DecodeHookFunc {
+func toTime() mapstructure.DecodeHookFunc {
 	return func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 		if t != reflect.TypeOf(time.Time{}) {
 			return data, nil
@@ -28,14 +27,13 @@ func toTimeHookFunc() mapstructure.DecodeHookFunc {
 	}
 }
 
-// FIXME: standarize method
-func stringToUUIDHookFunc() mapstructure.DecodeHookFunc {
+func ToUUID() mapstructure.DecodeHookFunc {
 	return func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-		if f.Kind() != reflect.String {
+		if t != reflect.TypeOf(uuid.UUID{}) {
 			return data, nil
 		}
 
-		if t != reflect.TypeOf(uuid.UUID{}) {
+		if f.Kind() != reflect.String {
 			return data, nil
 		}
 
@@ -47,8 +45,8 @@ func Decode(input map[string]interface{}, result interface{}) error {
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
-			toTimeHookFunc(),
-			stringToUUIDHookFunc()),
+			toTime(),
+			ToUUID()),
 		Result: result,
 	})
 	if err != nil {

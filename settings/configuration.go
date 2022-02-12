@@ -17,7 +17,7 @@ func init() {
 	environment := os.Getenv("ENVIROMENT")
 
 	if environment == "" {
-		fmt.Println(color.Ize(color.Yellow, "ENVIROMENT variable is not set, setting environment to: development"))
+		fmt.Println(color.Ize(color.Yellow, "ENVIROMENT variable is not set, setting Enviroment to: development"))
 	}
 
 	if environment != "" {

@@ -1,9 +1,8 @@
 package extensions
 
 import (
-	"os"
-
 	"github.com/TwiN/go-color"
+	"github.com/mikolajsemeniuk/go-elasticsearch-react-fullstack/settings"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -17,8 +16,7 @@ func init() {
 	encoderConfiguration := zap.NewDevelopmentEncoderConfig()
 	configuration := zap.NewDevelopmentConfig()
 
-	environment := os.Getenv("ENVIROMENT")
-	if environment != "development" {
+	if settings.Enviroment != "development" {
 		encoderConfiguration = zap.NewProductionEncoderConfig()
 		configuration = zap.NewProductionConfig()
 	}

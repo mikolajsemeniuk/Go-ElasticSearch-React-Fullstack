@@ -8,23 +8,30 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Configuration *viper.Viper
+var (
+	Configuration *viper.Viper
+	Enviroment    string = "development"
+)
 
 func init() {
 	environment := os.Getenv("ENVIROMENT")
+
 	if environment == "" {
-		os.Setenv("ENVIROMENT", "development")
-		fmt.Println(color.Ize(color.Yellow, "environment variable is not set, setting environment to: development"))
+		fmt.Println(color.Ize(color.Yellow, "ENVIROMENT variable is not set, setting environment to: development"))
+	}
+
+	if environment != "" {
+		Enviroment = environment
 	}
 
 	Configuration = viper.New()
 	Configuration.SetConfigType("yaml")
-	Configuration.SetConfigName(os.Getenv("ENVIROMENT"))
+	Configuration.SetConfigName(Enviroment)
 	Configuration.AddConfigPath("../settings")
 	Configuration.AddConfigPath("settings/")
 	err := Configuration.ReadInConfig()
 
 	if err != nil {
-		panic(err)
+		panic(color.Ize(color.Red, err.Error()))
 	}
 }
